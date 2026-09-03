@@ -10,6 +10,20 @@
             <p>Director: {{ movie.director }}</p>
             <p>Year: {{ movie.year }}</p>
             <img src="{{ movie.poster_url }}" alt="{{ movie.name }}">
+            <form action="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}" method="post">
+                <label for="update_name">Name</label>
+                <input id="update_name" type="text" name="name" value="{{ movie.name }}">
+                <label for="update_director">Director</label>
+                <input id="update_director" type="text" name="director" value="{{ movie.director }}">
+                <label for="update_year">Year</label>
+                <input id="update_year" type="text" name="year" value="{{ movie.year }}">
+                <label for="update_poster_url">Poster</label>
+                <input id="update_poster_url" type="text" name="poster_url" value="{{ movie.poster_url }}">
+                <button type="submit">Update</button>
+            </form>
+            <form action="{{ url_for('delete_movie', user_id=user_id, movie_id=movie.id) }}" method="post">
+                <button type="submit">Delete</button>
+            </form>
         </li>
         {% endfor %}
 </ul>

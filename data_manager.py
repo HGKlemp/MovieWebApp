@@ -23,9 +23,13 @@ class DataManager:
         db.session.add(movie)
         db.session.commit()
 
-    def update_movie(self, movie_id, new_title):
+    def update_movie(self, movie_id, name, director, year, poster_url):
         """Update a movie by its id."""
-        Movie.query.filter_by(id=movie_id).update({"name": new_title})
+        Movie.query.filter_by(id=movie_id).update({
+            "name": name,
+            "director": director,
+            "year": year,
+            "poster_url": poster_url})
         db.session.commit()
 
     def delete_movie(self, movie_id):
