@@ -6,9 +6,13 @@ class DataManager:
 
     def create_user(self, name):
         """Create a new user."""
-        new_user = User(name=name)
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            new_user = User(name=name)
+            db.session.add(new_user)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def get_users(self):
         """Return a list of all users."""
@@ -20,19 +24,31 @@ class DataManager:
 
     def add_movie(self, movie):
         """Add a new movie to the database."""
-        db.session.add(movie)
-        db.session.commit()
+        try:
+            db.session.add(movie)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def update_movie(self, movie_id, name, director, year, poster_url):
         """Update a movie by its id."""
-        Movie.query.filter_by(id=movie_id).update({
-            "name": name,
-            "director": director,
-            "year": year,
-            "poster_url": poster_url})
-        db.session.commit()
+        try:
+            Movie.query.filter_by(id=movie_id).update({
+                "name": name,
+                "director": director,
+                "year": year,
+                "poster_url": poster_url})
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def delete_movie(self, movie_id):
         """Delete a movie by its id."""
-        Movie.query.filter_by(id=movie_id).delete()
-        db.session.commit()
+        try:
+            Movie.query.filter_by(id=movie_id).delete()
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
