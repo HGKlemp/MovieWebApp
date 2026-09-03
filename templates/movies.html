@@ -3,4 +3,29 @@
 
 <h1>Movies</h1>
 
+<ul class="movie-list">
+    {% for movie in movies %}
+        <li class="movie-entry">
+            <h2>{{ movie.name }}</h2>
+            <p>Director: {{ movie.director }}</p>
+            <p>Year: {{ movie.year }}</p>
+            <img src="{{ movie.poster_url }}" alt="{{ movie.name }}">
+        </li>
+        {% endfor %}
+</ul>
+
+<form action="{{ url_for('add_movie', user_id=user_id) }}" method="post">
+    <label for="name">Name</label>
+    <input id="name" type="text" name="name" placeholder="Name">
+    <label for="year">Year</label>
+    <input id="year" type="text" name="year" placeholder="Year">
+    <label for="director">Director</label>
+    <input id="director" type="text" name="director" placeholder="Director">
+    <label for="poster_url">PosterUrl</label>
+    <input id="poster_url" type="text" name="poster_url" placeholder="Poster_url">
+    <button type="submit">Create</button>
+</form>
+
+
+
 {% endblock %}
