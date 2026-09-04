@@ -1,10 +1,13 @@
 import os
-
+import requests
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for
 
 from data_manager import DataManager
 from models import db, Movie
 
+load_dotenv()
+OMDB_API_KEY = os.getenv("OMDB_API_KEY")
 app = Flask(__name__)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -48,11 +51,20 @@ def get_movies(user_id):
 @app.route('/users/<int:user_id>/movies', methods=['POST'])
 def add_movie(user_id):
     """Create a new movie for a specific user."""
+    title = request.form.get('name')
+
+    url = "https://www.omdbapi.com/"
+    params = {"apikey": OMDB_API_KEY, "t": title}
+    response = requests.get(url, params=params, timeout=10)
+    movie_data = response.json()
+    if movie_data.get("Response") == "False":
+        return "Movie not found", 404
+
     movie = Movie(
-        name=request.form.get('name'),
-        director=request.form.get('director'),
-        year=request.form.get('year'),
-        poster_url=request.form.get('poster_url'),
+        name=movie_data.get("Title"),
+        director=movie_data.get("Director"),
+        year=movie_data.get("Year"),
+        poster_url=movie_data.get("Poster"),
         user_id=user_id
     )
     data_manager.add_movie(movie)
@@ -75,6 +87,12 @@ def delete_movie(user_id, movie_id):
     """Delete a movie and redirect to the movie list."""
     data_manager.delete_movie(movie_id)
     return redirect(url_for('get_movies', user_id=user_id))
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    """Display a custom page when a resource is not found."""
+    return render_template('404.html'), 404
 
 
 if __name__ == '__main__':

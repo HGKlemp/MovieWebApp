@@ -30,13 +30,7 @@
 
 <form action="{{ url_for('add_movie', user_id=user_id) }}" method="post">
     <label for="name">Name</label>
-    <input id="name" type="text" name="name" placeholder="Name">
-    <label for="year">Year</label>
-    <input id="year" type="text" name="year" placeholder="Year">
-    <label for="director">Director</label>
-    <input id="director" type="text" name="director" placeholder="Director">
-    <label for="poster_url">PosterUrl</label>
-    <input id="poster_url" type="text" name="poster_url" placeholder="Poster_url">
+    <input id="name" type="text" name="name" placeholder="Movie title">
     <button type="submit">Create</button>
 </form>
 
