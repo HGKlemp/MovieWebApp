@@ -1,39 +1,97 @@
 {% extends "base.html" %}
-{% block content %}
 
+{% block content %}
 <h1>Movies</h1>
 
 <ul class="movie-list">
     {% for movie in movies %}
         <li class="movie-entry">
             <h2>{{ movie.name }}</h2>
+
             <p>Director: {{ movie.director }}</p>
             <p>Year: {{ movie.year }}</p>
-            <img src="{{ movie.poster_url }}" alt="{{ movie.name }}">
-            <form action="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}" method="post">
-                <label for="update_name">Name</label>
-                <input id="update_name" type="text" name="name" value="{{ movie.name }}">
-                <label for="update_director">Director</label>
-                <input id="update_director" type="text" name="director" value="{{ movie.director }}">
-                <label for="update_year">Year</label>
-                <input id="update_year" type="text" name="year" value="{{ movie.year }}">
-                <label for="update_poster_url">Poster</label>
-                <input id="update_poster_url" type="text" name="poster_url" value="{{ movie.poster_url }}">
+
+            <img
+                src="{{ movie.poster_url }}"
+                alt="Poster for {{ movie.name }}"
+            >
+
+            <form
+                action="{{ url_for(
+                    'update_movie',
+                    user_id=user_id,
+                    movie_id=movie.id
+                ) }}"
+                method="post"
+            >
+                <label for="update_name_{{ movie.id }}">Name</label>
+                <input
+                    id="update_name_{{ movie.id }}"
+                    type="text"
+                    name="name"
+                    value="{{ movie.name }}"
+                    required
+                >
+
+                <label for="update_director_{{ movie.id }}">
+                    Director
+                </label>
+                <input
+                    id="update_director_{{ movie.id }}"
+                    type="text"
+                    name="director"
+                    value="{{ movie.director }}"
+                    required
+                >
+
+                <label for="update_year_{{ movie.id }}">Year</label>
+                <input
+                    id="update_year_{{ movie.id }}"
+                    type="number"
+                    name="year"
+                    value="{{ movie.year }}"
+                    required
+                >
+
+                <label for="update_poster_url_{{ movie.id }}">
+                    Poster
+                </label>
+                <input
+                    id="update_poster_url_{{ movie.id }}"
+                    type="text"
+                    name="poster_url"
+                    value="{{ movie.poster_url }}"
+                    required
+                >
+
                 <button type="submit">Update</button>
             </form>
-            <form action="{{ url_for('delete_movie', user_id=user_id, movie_id=movie.id) }}" method="post">
+
+            <form
+                action="{{ url_for(
+                    'delete_movie',
+                    user_id=user_id,
+                    movie_id=movie.id
+                ) }}"
+                method="post"
+            >
                 <button type="submit">Delete</button>
             </form>
         </li>
-        {% endfor %}
+    {% else %}
+        <li>No movies found.</li>
+    {% endfor %}
 </ul>
 
 <form action="{{ url_for('add_movie', user_id=user_id) }}" method="post">
-    <label for="name">Name</label>
-    <input id="name" type="text" name="name" placeholder="Movie title">
+    <label for="name">Movie title</label>
+    <input
+        id="name"
+        type="text"
+        name="name"
+        placeholder="Movie title"
+        required
+    >
     <button type="submit">Create</button>
 </form>
-
-
-
 {% endblock %}

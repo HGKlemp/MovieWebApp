@@ -1,4 +1,6 @@
-from models import db, User, Movie
+from sqlalchemy.exc import SQLAlchemyError
+
+from models import Movie, User, db
 
 
 class DataManager:
@@ -10,7 +12,7 @@ class DataManager:
             new_user = User(name=name)
             db.session.add(new_user)
             db.session.commit()
-        except Exception:
+        except SQLAlchemyError:
             db.session.rollback()
             raise
 
@@ -27,28 +29,31 @@ class DataManager:
         try:
             db.session.add(movie)
             db.session.commit()
-        except Exception:
+        except SQLAlchemyError:
             db.session.rollback()
             raise
 
     def update_movie(self, movie_id, name, director, year, poster_url):
-        """Update a movie by its id."""
+        """Update a movie by its ID."""
         try:
-            Movie.query.filter_by(id=movie_id).update({
-                "name": name,
-                "director": director,
-                "year": year,
-                "poster_url": poster_url})
+            Movie.query.filter_by(id=movie_id).update(
+                {
+                    "name": name,
+                    "director": director,
+                    "year": year,
+                    "poster_url": poster_url,
+                }
+            )
             db.session.commit()
-        except Exception:
+        except SQLAlchemyError:
             db.session.rollback()
             raise
 
     def delete_movie(self, movie_id):
-        """Delete a movie by its id."""
+        """Delete a movie by its ID."""
         try:
             Movie.query.filter_by(id=movie_id).delete()
             db.session.commit()
-        except Exception:
+        except SQLAlchemyError:
             db.session.rollback()
             raise
