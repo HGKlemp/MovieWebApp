@@ -11,7 +11,8 @@ Each user can have their own movie collection. Movies can be added by entering o
 - Show movies for a specific user
 - Add movies by title
 - Get movie information automatically from the OMDb API
-- Update movie information
+- Rate movies from 0 to 10 and update the personal rating
+- Prevent duplicate movie titles for the same user
 - Delete movies
 - Store data in a SQLite database
 - Custom 404 error page
@@ -35,6 +36,7 @@ Each user can have their own movie collection. Movies can be added by entering o
 MovieWebApp/
 │
 ├── app.py
+├── omdb_api.py
 ├── data_manager.py
 ├── models.py
 ├── requirements.txt
@@ -95,7 +97,8 @@ http://127.0.0.1:5000
 3. Enter a movie title.
 4. Click **Create**.
 5. MoviWeb gets the director, year and poster automatically from the OMDb API.
-6. Movies can also be updated or deleted.
+6. Give the movie a personal rating from 0 to 10.
+7. Ratings can be updated and movies can be deleted.
 
 ## Author
 

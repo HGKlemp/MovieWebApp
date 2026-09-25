@@ -1,32 +1,37 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Users</h1>
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Step 1</p>
+        <h1>Choose a user</h1>
+        <p>Open a profile to view and rate its movies.</p>
+    </div>
+</section>
 
-<ul class="user-list">
-    {% for user in users %}
-        <li class="user-entry">
-            <a
-                href="{{ url_for('get_movies', user_id=user.id) }}"
-                class="btn"
-            >
-                {{ user.name }}
-            </a>
-        </li>
-    {% else %}
-        <li>No users found.</li>
-    {% endfor %}
-</ul>
+<section class="panel">
+    <h2>Profiles</h2>
+    <ul class="user-list">
+        {% for user in users %}
+            <li class="user-entry">
+                <a href="{{ url_for('get_movies', user_id=user.id) }}" class="btn btn-secondary">
+                    {{ user.name }}
+                </a>
+            </li>
+        {% else %}
+            <li class="empty-state">No users yet. Create the first profile below.</li>
+        {% endfor %}
+    </ul>
+</section>
 
-<form action="{{ url_for('create_user') }}" method="post">
-    <label for="name">Name</label>
-    <input
-        id="name"
-        type="text"
-        name="name"
-        placeholder="Name"
-        required
-    >
-    <button type="submit">Create</button>
-</form>
+<section class="panel form-panel">
+    <h2>Create a profile</h2>
+    <form class="inline-form" action="{{ url_for('create_user') }}" method="post">
+        <div class="field">
+            <label for="name">Name</label>
+            <input id="name" type="text" name="name" placeholder="e.g. Alex" required>
+        </div>
+        <button type="submit">Create profile</button>
+    </form>
+</section>
 {% endblock %}

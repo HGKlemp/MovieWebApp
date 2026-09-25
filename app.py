@@ -1,11 +1,11 @@
 import os
 
-import requests
 from dotenv import load_dotenv
-from flask import Flask, redirect, render_template, request, url_for
+from flask import abort, flash, Flask, redirect, render_template, request, url_for
 
 from data_manager import DataManager
 from models import Movie, db
+from omdb_api import MovieNotFoundError, OMDbAPI, OMDbAPIError
 
 
 load_dotenv()
@@ -16,6 +16,7 @@ if not OMDB_API_KEY:
     raise RuntimeError("OMDB_API_KEY is not set.")
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "development-secret-key")
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -25,6 +26,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
 data_manager = DataManager()
+movie_api = OMDbAPI(OMDB_API_KEY)
 
 
 @app.route("/")
@@ -44,18 +46,28 @@ def list_users():
 @app.route("/users", methods=["POST"])
 def create_user():
     """Create a new user and redirect to the start page."""
-    name = request.form.get("name")
+    name = request.form.get("name", "").strip()
+    if not name:
+        flash("Please enter a user name.", "error")
+        return redirect(url_for("index"))
+
     data_manager.create_user(name)
+    flash(f"User {name} was created.", "success")
     return redirect(url_for("index"))
 
 
 @app.route("/users/<int:user_id>/movies")
 def get_movies(user_id):
     """Display all movies for a specific user."""
+    user = data_manager.get_user(user_id)
+    if user is None:
+        abort(404)
+
     movies = data_manager.get_movies(user_id)
     return render_template(
         "movies.html",
         movies=movies,
+        user=user,
         user_id=user_id,
     )
 
@@ -63,42 +75,42 @@ def get_movies(user_id):
 @app.route("/users/<int:user_id>/movies", methods=["POST"])
 def add_movie(user_id):
     """Create a new movie for a specific user."""
-    title = request.form.get("name")
+    if data_manager.get_user(user_id) is None:
+        abort(404)
 
-    url = "https://www.omdbapi.com/"
-    params = {
-        "apikey": OMDB_API_KEY,
-        "t": title,
-    }
+    title = request.form.get("name", "").strip()
+    if not title:
+        flash("Please enter a movie title.", "error")
+        return redirect(url_for("get_movies", user_id=user_id))
 
-    try:
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-    except requests.RequestException:
-        return "OMDb API is currently unavailable.", 503
+    if data_manager.movie_title_exists(user_id, title):
+        flash("This movie is already in your collection.", "error")
+        return redirect(url_for("get_movies", user_id=user_id))
 
     try:
-        movie_data = response.json()
-    except ValueError:
-        return "Invalid response from OMDb API.", 502
+        movie_data = movie_api.fetch_movie(title)
+    except MovieNotFoundError as error:
+        flash(str(error), "error")
+        return redirect(url_for("get_movies", user_id=user_id))
+    except OMDbAPIError as error:
+        flash(str(error), "error")
+        return redirect(url_for("get_movies", user_id=user_id))
 
-    if movie_data.get("Response") == "False":
-        return "Movie not found.", 404
-
-    year_text = movie_data.get("Year")
-
-    if not year_text or not year_text.isdigit():
-        return "Invalid movie year from OMDb API.", 502
+    if data_manager.movie_title_exists(user_id, movie_data["name"]):
+        flash("This movie is already in your collection.", "error")
+        return redirect(url_for("get_movies", user_id=user_id))
 
     movie = Movie(
-        name=movie_data.get("Title"),
-        director=movie_data.get("Director"),
-        year=int(year_text),
-        poster_url=movie_data.get("Poster"),
+        name=movie_data["name"],
+        director=movie_data["director"],
+        year=movie_data["year"],
+        poster_url=movie_data["poster_url"],
+        rating=0.0,
         user_id=user_id,
     )
 
     data_manager.add_movie(movie)
+    flash(f'{movie.name} was added.', "success")
 
     return redirect(url_for("get_movies", user_id=user_id))
 
@@ -108,20 +120,21 @@ def add_movie(user_id):
     methods=["POST"],
 )
 def update_movie(user_id, movie_id):
-    """Update an existing movie and redirect to the movie list."""
-    name = request.form.get("name")
-    director = request.form.get("director")
-    year = request.form.get("year")
-    poster_url = request.form.get("poster_url")
+    """Update only the personal rating of an existing movie."""
+    try:
+        rating = float(request.form.get("rating", ""))
+    except ValueError:
+        flash("Please enter a valid rating.", "error")
+        return redirect(url_for("get_movies", user_id=user_id))
 
-    data_manager.update_movie(
-        movie_id,
-        name,
-        director,
-        year,
-        poster_url,
-    )
+    if not 0 <= rating <= 10:
+        flash("The rating must be between 0 and 10.", "error")
+        return redirect(url_for("get_movies", user_id=user_id))
 
+    if not data_manager.update_movie_rating(user_id, movie_id, rating):
+        abort(404)
+
+    flash("Rating updated.", "success")
     return redirect(url_for("get_movies", user_id=user_id))
 
 
@@ -131,8 +144,10 @@ def update_movie(user_id, movie_id):
 )
 def delete_movie(user_id, movie_id):
     """Delete a movie and redirect to the movie list."""
-    data_manager.delete_movie(movie_id)
+    if not data_manager.delete_movie(user_id, movie_id):
+        abort(404)
 
+    flash("Movie deleted.", "success")
     return redirect(url_for("get_movies", user_id=user_id))
 
 
